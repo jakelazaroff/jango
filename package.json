@@ -1,0 +1,32 @@
+{
+  "name": "jango",
+  "version": "0.1.0",
+  "description": "A tiny alternative to Immutable.js",
+  "main": "dist/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "babel src -d dist",
+    "test": "node test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jakelazaroff/jango.git"
+  },
+  "keywords": [
+    "immutable"
+  ],
+  "author": "Jake Lazaroff <yo@jake.nyc> (http://jakelazaroff.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jakelazaroff/jango/issues"
+  },
+  "homepage": "https://github.com/jakelazaroff/jango#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.4.5",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-0": "^6.3.13"
+  }
+}
