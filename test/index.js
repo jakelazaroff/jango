@@ -132,6 +132,7 @@ assert(d.get(['a', 0]).val() === 'b');
 assert(d.merge({one: {two: 'three'}}) === d);
 assert(d.merge({a: ['b', 'c']}) === d);
 assert(d.set(['one', 'two'], 'three') === d);
+assert(d.set(['one'], {'two': 'three'}) === d);
 assert(d.set(['a', 0], 'b') === d);
 
 // returns new instance if setting different value
