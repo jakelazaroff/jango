@@ -144,3 +144,19 @@ assert(d.set(['one', 'two'], 'four') !== d);
 assert(d.set(['one', 'two'], 'four').get(['one', 'two']).val() === 'four');
 assert(d.set(['a', 0], 'd') !== d);
 assert(d.set(['a', 0], 'd').get(['a', 0]).val() === 'd');
+
+
+// MAP
+var m = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
+
+// returns same instance if setting same values
+var n = m.get('obj').map(function (child) { return child.val(); });
+assert(n === m.get('obj'));
+assert(n.get('one').val() === 1);
+assert(n.get('two').val() === 2);
+
+// returns different instance if setting new values
+n = m.get('arr').map(function (child) { return child.val() * 2; });
+assert(n !== m.get('arr'));
+assert(n.get(0).val() === 2);
+assert(n.get(1).val() === 4);
