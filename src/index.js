@@ -85,6 +85,11 @@
 
       // if replacing a literal with a literal (or mismatched types)
       else
+
+        // if value is an instance of jango, unwrap it
+        if (value instanceof Jango)
+          value = value.val();
+
         // return a new value if it's different; otherwise, return this
         return this._value === value ? this : Jango(value);
     }

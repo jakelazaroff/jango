@@ -87,8 +87,12 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
           // if replacing a literal with a literal (or mismatched types)
         else
-          // return a new value if it's different; otherwise, return this
-          return this._value === value ? this : Jango(value);
+
+          // if value is an instance of jango, unwrap it
+          if (value instanceof Jango) value = value.val();
+
+        // return a new value if it's different; otherwise, return this
+        return this._value === value ? this : Jango(value);
       }
   };
 

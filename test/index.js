@@ -26,10 +26,13 @@ a.set('blah'); assert(a.val() === 'test');
 
 // returns same instance if setting same value
 assert(a.set('test') === a);
+assert(a.set(Jango('test')) === a);
 
 // returns new instance if setting new value
+assert(a.set('blah').val() === 'blah');
 assert(a.set('blah') !== a);
-
+assert(a.set(Jango('blah')).val() === 'blah');
+assert(a.set(Jango('blah')) !== a);
 
 // OBJECTS
 var b = Jango({one: 1, two: 2});
