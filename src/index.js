@@ -145,7 +145,7 @@
       var equal = true,
 
           assign = Object.keys(this._value).reduce((assign, key, index) => {
-            assign[key] = this.set(key, fn(this._value[key], index)).get(key);
+            assign[key] = this.set(key, fn(this._value[key], key)).get(key);
 
             equal = equal && assign[key] === this.get(key);
 

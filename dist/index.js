@@ -146,7 +146,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     if (arr || isObject(this._value)) {
       var equal = true,
           assign = Object.keys(this._value).reduce(function (assign, key, index) {
-        assign[key] = _this3.set(key, fn(_this3._value[key], index)).get(key);
+        assign[key] = _this3.set(key, fn(_this3._value[key], key)).get(key);
 
         equal = equal && assign[key] === _this3.get(key);
 

@@ -152,6 +152,10 @@ assert(d.set(['a', 0], 'd').get(['a', 0]).val() === 'd');
 // MAP
 var m = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
 
+// passes each child and the key to the predicate
+m.get('obj').map(function (child, key) { assert(child === m.get(['obj', key])); });
+m.get('arr').map(function (child, key) { assert(child === m.get(['arr', key])); });
+
 // returns same instance if setting same values
 var n = m.get('obj').map(function (child) { return child.val(); });
 assert(n === m.get('obj'));
