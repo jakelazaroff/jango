@@ -52,6 +52,9 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   Jango.prototype.set = function (key, value) {
     var path = arguments.length === 2 ? [].concat(key) : (value = key, []);
 
+    // if value is an instance of jango, unwrap it
+    if (Jango.isJango(value)) value = value.val();
+
     // if this is a branch
     if (path.length > 0) {
       var key = path.shift(),
@@ -92,9 +95,6 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
           // if replacing a literal with a literal (or mismatched types)
         } else {
 
-            // if value is an instance of jango, unwrap it
-            if (Jango.isJango(value)) value = value.val();
-
             // return a new value if it's different; otherwise, return this
             return this._value === value ? this : Jango(value);
           }
@@ -106,13 +106,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var additive = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
 
-    // if source is an instance of jango, unwrap it
+    // if source is a jango, unwrap it
     if (Jango.isJango(source)) source = source.val();
 
     var arr = isArray(source);
 
     // if merging an array or an object
-    if (arr || isObject(source) || isJango) {
+    if (arr || isObject(source)) {
       var equal = true,
           assign = (arr ?
 
@@ -122,11 +122,14 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       // if this holds an object, create a union of the source and destionation keys
       Object.keys(_extends({}, this._value, source))).reduce(function (assign, key) {
 
+        // if the key holds a jango, unwrap it
+        var value = Jango.isJango(source[key]) ? source[key].val() : source[key];
+
         // if the key is in both the source and destination, set it
-        if (key in source && key in _this2._value) assign[key] = _this2._value[key].set(source[key]);
+        if (key in source && key in _this2._value) assign[key] = _this2._value[key].set(value);
 
         // if the key is in the destination but not the source, add it
-        else if (key in source) assign[key] = Jango(source[key]);
+        else if (key in source) assign[key] = Jango(value);
 
           // if the key is in the source but not the destination, copy it if merging additively
           else if (additive) assign[key] = _this2._value[key];

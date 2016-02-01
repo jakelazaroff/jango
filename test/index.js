@@ -149,8 +149,10 @@ assert(d.set(['a', 0], 'd') !== d);
 assert(d.set(['a', 0], 'd').get(['a', 0]).val() === 'd');
 
 // merges deeply nested jangos
-d = Jango({one: {two: {three: 'four'} } });
+d = Jango({one: Jango({two: Jango({three: Jango('four')}) }) });
 assert(d.merge(d) === d);
+d = Jango({one: [Jango({two: Jango(2)}), Jango({three: Jango(3)}), Jango({four: Jango(4)})]});
+assert(d.set('one', d.get('one').map(item => item.merge(item))) === d);
 
 
 // MAP

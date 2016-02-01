@@ -51,6 +51,10 @@
   Jango.prototype.set = function (key, value) {
     var path = arguments.length === 2 ? [].concat(key) : ((value = key), []);
 
+    // if value is an instance of jango, unwrap it
+    if (Jango.isJango(value))
+      value = value.val();
+
     // if this is a branch
     if (path.length > 0) {
       var key = path.shift(),
@@ -90,10 +94,6 @@
       // if replacing a literal with a literal (or mismatched types)
       } else {
 
-        // if value is an instance of jango, unwrap it
-        if (Jango.isJango(value))
-          value = value.val();
-
         // return a new value if it's different; otherwise, return this
         return this._value === value ? this : Jango(value);
       }
@@ -102,14 +102,14 @@
 
   Jango.prototype.merge = function (source, additive = true) {
 
-    // if source is an instance of jango, unwrap it
+    // if source is a jango, unwrap it
     if (Jango.isJango(source))
       source = source.val();
 
     var arr = isArray(source);
 
     // if merging an array or an object
-    if (arr || isObject(source) || isJango) {
+    if (arr || isObject(source)) {
       var equal = true,
 
           assign = (arr ?
@@ -121,13 +121,16 @@
             Object.keys({ ...this._value, ...source }))
               .reduce((assign, key) => {
 
+                // if the key holds a jango, unwrap it
+                var value = Jango.isJango(source[key]) ? source[key].val() : source[key];
+
                 // if the key is in both the source and destination, set it
                 if (key in source && key in this._value)
-                  assign[key] = this._value[key].set(source[key]);
+                  assign[key] = this._value[key].set(value);
 
                 // if the key is in the destination but not the source, add it
                 else if (key in source)
-                  assign[key] = Jango(source[key]);
+                  assign[key] = Jango(value);
 
                 // if the key is in the source but not the destination, copy it if merging additively
                 else if (additive)
