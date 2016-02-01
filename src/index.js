@@ -7,8 +7,8 @@
     root.Jango = factory();
 }(this, function () {
 
-  function isObject (obj) { return typeof obj === 'object'; }
-  function isArray (obj) { return Array.isArray(obj); }
+  function isObject (obj) { return obj && typeof obj === 'object' && obj.constructor === Object; }
+  function isArray (obj) { return obj && Array.isArray(obj); }
 
   function Jango (value) {
     if (this) {
@@ -26,6 +26,10 @@
         return new Jango(value);
     }
   }
+
+  Jango.isJango = function (obj) {
+    return obj instanceof Jango;
+  };
 
   Jango.prototype.val = function () {
     var array = isArray(this._value);
@@ -78,20 +82,21 @@
       var arr = isArray(value) && isArray(this._value);
 
       // if replacing an array with an array or an object with an object
-      if (arr || (isObject(value) && isObject(this._value)))
+      if (arr || (isObject(value) && isObject(this._value))) {
 
         // merge the value into this non-additively (removing keys found only in value)
         return this.merge(value, false);
 
       // if replacing a literal with a literal (or mismatched types)
-      else
+      } else {
 
         // if value is an instance of jango, unwrap it
-        if (value instanceof Jango)
+        if (Jango.isJango(value))
           value = value.val();
 
         // return a new value if it's different; otherwise, return this
         return this._value === value ? this : Jango(value);
+      }
     }
   };
 

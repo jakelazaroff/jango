@@ -13,10 +13,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 })(undefined, function () {
 
   function isObject(obj) {
-    return (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object';
+    return obj && (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) === 'object' && obj.constructor === Object;
   }
   function isArray(obj) {
-    return Array.isArray(obj);
+    return obj && Array.isArray(obj);
   }
 
   function Jango(value) {
@@ -28,6 +28,10 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       if (isArray(value)) return new Jango([]).merge(value);else if (isObject(value)) return new Jango({}).merge(value);else return new Jango(value);
     }
   }
+
+  Jango.isJango = function (obj) {
+    return obj instanceof Jango;
+  };
 
   Jango.prototype.val = function () {
     var _this = this;
@@ -80,19 +84,20 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
         var arr = isArray(value) && isArray(this._value);
 
         // if replacing an array with an array or an object with an object
-        if (arr || isObject(value) && isObject(this._value))
+        if (arr || isObject(value) && isObject(this._value)) {
 
           // merge the value into this non-additively (removing keys found only in value)
           return this.merge(value, false);
 
           // if replacing a literal with a literal (or mismatched types)
-        else
+        } else {
 
-          // if value is an instance of jango, unwrap it
-          if (value instanceof Jango) value = value.val();
+            // if value is an instance of jango, unwrap it
+            if (Jango.isJango(value)) value = value.val();
 
-        // return a new value if it's different; otherwise, return this
-        return this._value === value ? this : Jango(value);
+            // return a new value if it's different; otherwise, return this
+            return this._value === value ? this : Jango(value);
+          }
       }
   };
 
