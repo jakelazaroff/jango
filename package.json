@@ -1,6 +1,6 @@
 {
   "name": "jango",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A tiny alternative to Immutable.js",
   "main": "dist/index.js",
   "directories": {

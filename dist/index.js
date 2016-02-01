@@ -30,7 +30,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
   }
 
   Jango.isJango = function (obj) {
-    return obj instanceof Jango;
+    return obj && Jango.toString() === obj.constructor.toString();
   };
 
   Jango.prototype.val = function () {
@@ -106,10 +106,13 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
     var additive = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
 
+    // if source is an instance of jango, unwrap it
+    if (Jango.isJango(source)) source = source.val();
+
     var arr = isArray(source);
 
     // if merging an array or an object
-    if (arr || isObject(source)) {
+    if (arr || isObject(source) || isJango) {
       var equal = true,
           assign = (arr ?
 
@@ -183,6 +186,8 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       throw new Error('Can\'t iterate over literal "' + this._value + '"');
     }
   };
+
+  var a = Jango({ one: Jango({ two: Jango({ three: 'four' }) }) });
 
   return Jango;
 });

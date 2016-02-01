@@ -28,7 +28,7 @@
   }
 
   Jango.isJango = function (obj) {
-    return obj instanceof Jango;
+    return obj && Jango.toString() === obj.constructor.toString();
   };
 
   Jango.prototype.val = function () {
@@ -101,10 +101,15 @@
   };
 
   Jango.prototype.merge = function (source, additive = true) {
+
+    // if source is an instance of jango, unwrap it
+    if (Jango.isJango(source))
+      source = source.val();
+
     var arr = isArray(source);
 
     // if merging an array or an object
-    if (arr || isObject(source)) {
+    if (arr || isObject(source) || isJango) {
       var equal = true,
 
           assign = (arr ?
@@ -185,6 +190,8 @@
       throw new Error('Can\'t iterate over literal "' + this._value + '"');
     }
   };
+
+  var a = Jango({one: Jango({two: Jango({three: 'four'}) }) });
 
   return Jango;
 
