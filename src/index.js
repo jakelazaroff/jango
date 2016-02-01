@@ -150,12 +150,35 @@
       var equal = true,
 
           assign = Object.keys(this._value).reduce((assign, key, index) => {
-            assign[key] = this.set(key, fn(this._value[key], key)).get(key);
+            assign[key] = this.set(key, fn(this.get(key), key, this)).get(key);
 
             equal = equal && assign[key] === this.get(key);
 
             return assign;
           }, arr ? [ ...this._value ] : { ...this._value });
+
+      return equal ? this : new Jango(assign);
+    } else {
+      throw new Error('Can\'t iterate over literal "' + this._value + '"');
+    }
+  };
+
+  Jango.prototype.filter = function (fn) {
+    var arr = isArray(this._value);
+
+    if (arr || isObject(this._value)) {
+      var equal = true,
+
+          assign = Object.keys(this._value).reduce((assign, key, index) => {
+
+            if (fn(this.get(key), key, this))
+              arr ? assign.push(this.get(key)) : assign[key] = this.get(key);
+
+            else
+              equal = false;
+
+            return assign;
+          }, arr ? [] : {});
 
       return equal ? this : new Jango(assign);
     } else {

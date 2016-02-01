@@ -151,12 +151,32 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     if (arr || isObject(this._value)) {
       var equal = true,
           assign = Object.keys(this._value).reduce(function (assign, key, index) {
-        assign[key] = _this3.set(key, fn(_this3._value[key], key)).get(key);
+        assign[key] = _this3.set(key, fn(_this3.get(key), key, _this3)).get(key);
 
         equal = equal && assign[key] === _this3.get(key);
 
         return assign;
       }, arr ? [].concat(_toConsumableArray(this._value)) : _extends({}, this._value));
+
+      return equal ? this : new Jango(assign);
+    } else {
+      throw new Error('Can\'t iterate over literal "' + this._value + '"');
+    }
+  };
+
+  Jango.prototype.filter = function (fn) {
+    var _this4 = this;
+
+    var arr = isArray(this._value);
+
+    if (arr || isObject(this._value)) {
+      var equal = true,
+          assign = Object.keys(this._value).reduce(function (assign, key, index) {
+
+        if (fn(_this4.get(key), key, _this4)) arr ? assign.push(_this4.get(key)) : assign[key] = _this4.get(key);else equal = false;
+
+        return assign;
+      }, arr ? [] : {});
 
       return equal ? this : new Jango(assign);
     } else {
