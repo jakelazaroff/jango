@@ -1,211 +1,165 @@
+// libraries
+require('chai').should();
+var expect = require('chai').expect;
+
+// jango
 var Jango = require('../dist');
 
-function assert (condition) {
-  if (!condition)
-    throw new Error('Assertion failed');
-}
+describe('Jango', function () {
 
-// LITERALS
-var a = Jango('test');
+  var a = Jango('test'),
+      b = Jango({one: 1, two: 2}),
+      c = Jango([1, 2, 3]),
+      d = Jango({one: {two: 'three'}, a: ['b', 'c']});
 
-// returns an instance of Jango
-assert(a instanceof Jango);
+  describe('constructor', function () {
 
-// sets the value correctly
-assert(a.val() === 'test');
+    it('should return an instance of jango', function () {
+      a.should.be.an.instanceof(Jango);
+    });
 
-// throws an error if trying to mutate value directly
-try {
-  a._value = 'anything';
-} catch (err) {
-  assert(err.message !== 'Assertion failed');
-}
+    it('should set the value correctly', function () {
+      a.val().should.equal('test');
+    });
 
-// doesn't mutate when setting
-a.set('blah'); assert(a.val() === 'test');
+    it('should create instances of jango in an object', function () {
+      b.get('one').should.be.an.instanceof(Jango);
+    });
 
-// returns same instance if setting same value
-assert(a.set('test') === a);
-assert(a.set(Jango('test')) === a);
+    it('should create instances of jango in an array', function () {
+      c.get(0).should.be.an.instanceof(Jango);
+    });
 
-// returns new instance if setting new value
-assert(a.set('blah').val() === 'blah');
-assert(a.set('blah') !== a);
-assert(a.set(Jango('blah')).val() === 'blah');
-assert(a.set(Jango('blah')) !== a);
+    it('should set the values correctly in an object', function () {
+      b.get('one').val().should.equal(1);
+    });
 
-// OBJECTS
-var b = Jango({one: 1, two: 2});
+    it('should set the values correctly in an array', function () {
+      c.get(0).val().should.equal(1);
+    });
 
-// returns an instance of Jango for properties
-assert(b.get('one') instanceof Jango);
+    it('should recursively create nested instances of jango', function () {
+      d.get(['one', 'two']).should.be.an.instanceof(Jango);
+      d.get(['a', 0]).should.be.an.instanceof(Jango);
+    });
 
-// sets the value correctly
-assert(b.get('one').val() === 1);
+    it('should recursively set the values correctly ', function () {
+      d.get(['one', 'two']).val().should.equal('three');
+      d.get(['a', 0]).val().should.equal('b');
+    });
+  });
 
-// doesn't mutate when setting
-b.merge({one: 'val2'}); assert(b.get('one').val() === 1);
+  describe('.val', function () {
 
-// returns same instance if setting same value
-assert(b.merge({one: 1, two: 2}) === b);
+    it('should return the value', function () {
+      a.val().should.equal('test');
+    });
 
-// returns same instance if setting same partial value
-assert(b.merge({one: 1}) === b);
-assert(b.set('one', 1) === b);
+    it('should return nested values', function () {
+      b.val().should.eql({one: 1, two: 2});
+      c.val().should.eql([1, 2, 3]);
+    });
 
-// overwrites objects
-assert(b.set('test').val() === 'test');
+    it('should not recursively return values if `shallow` options is passed', function () {
+      var b3 = b.val({shallow: true});
 
-// returns new instance if setting new partial value
-assert(b.merge({one: 2}) !== b);
-assert(b.set('one', 2) !== b);
+      b.get('one').should.equal(b3['one']);
+      b.get('two').should.equal(b3['two']);
 
-// returns new instance of changed keys
-assert(b.merge({one: 2}).get('one') !== b.get('one'));
+      var c3 = c.val({shallow: true});
 
-// returns same instance of unchanged keys
-assert(b.merge({one: 2}).get('two') === b.get('two'));
+      c.get(0).should.equal(c3[0]);
+      c.get(1).should.equal(c3[1]);
+      c.get(2).should.equal(c3[2]);
+    });
+  });
 
-// allows new keys to be added
-assert(b.merge({three: 3}).get('three') instanceof Jango);
-assert(b.merge({three: 3}).get('three').val() === 3);
-assert(b.merge({three: 3}) !== b);
-assert(b.set('three', 3).get('three') instanceof Jango);
-assert(b.set('three', 3).get('three').val() === 3);
-assert(b.set('three', 3) !== b);
+  describe('.get', function () {
 
+    it('should return an instance of jango if passed a key in the value', function () {
+      b.get('one').should.be.an.instanceof(Jango);
+      b.get('one').val().should.equal(1);
+    });
 
-// returns new instance if setting new key
-assert(b.merge({three: 3}) !== b);
-assert(b.set('three', 3) !== b);
+    it('should return an instance of jango if passed a nonexistent key', function () {
+      expect(b.get('nope')).not.to.exist;
+    });
 
+    it('should return a nested instance of jango if passed an array', function () {
+      d.get(['one', 'two']).should.be.an.instanceof(Jango);
+      d.get(['one', 'two']).val().should.equal('three');
+    });
+  });
 
-// ARRAYS
-var c = Jango([1, 2, 3]);
+  describe('.set', function () {
 
-// returns an instance of Jango for elements
-assert(c.get(0) instanceof Jango);
+    it('shouldn\'t mutate when setting', function () {
+      a.set('blah');
+      a.val().should.equal('test');
+    });
 
-// sets the value correctly
-assert(c.get(0).val() === 1);
+    it('should convert objects and arrays to instances of jango', function () {
+      a.set({one: 1}).get('one').should.be.an.instanceof(Jango);
+      a.set([1]).get(0).should.be.an.instanceof(Jango);
+    });
 
-// doesn't mutate when setting
-c.merge([2, 3]); assert(c.get(0).val() === 1);
+    it('should set nested value if passed an array', function () {
+      d.set(['one', 'two'], 'three').get(['one', 'two']).val().should.equal('three');
+    });
 
-// returns same instance if setting same value
-assert(c.merge([1, 2, 3]) === c);
+    it('should return the same instance if setting the same value', function () {
+      a.set('test').should.equal(a);
+    });
 
-// returns same instance if setting same partial value
-assert(c.merge([1]) === c);
-assert(c.set(0, 1) === c);
+    it('should return the same instance if returning a jango with the same value', function () {
+      a.set(Jango('test')).should.equal(a);
+    });
 
-// returns new instance if setting new partial value
-assert(c.merge([2]) !== c);
-assert(c.set(0, 2) !== c);
+    it('should return a new instance if setting a new value', function () {
+      a.set('blah').val().should.equal('blah');
+      a.set('blah').val().should.not.equal(a);
+    });
 
-// returns new instance of changed keys
-assert(c.merge([2]).get(0) !== c.get(0));
+    it('should return a new instance if setting a jango with a new value', function () {
+      a.set(Jango('blah')).val().should.equal('blah');
+      a.set(Jango('blah')).val().should.not.equal(a);
+    });
 
-// returns same instance of unchanged keys
-assert(c.merge([1]).get(0) === c.get(0));
+    it('should return the same instance if setting same partial value', function () {
+      b.set('one', 1).should.equal(b);
+      c.set(0, 1).should.equal(c);
+      d.set(['one', 'two'], 'three').should.equal(d);
+      d.set('one', {two: 'three'}).should.equal(d);
+      d.set(['a', 0], 'b').should.equal(d);
+    });
 
-// allows new keys to be added
-assert(c.merge([1, 2, 3, 4]).get(3) instanceof Jango);
-assert(c.merge([1, 2, 3, 4]).get(3).val() === 4);
-assert(c.set(3, 4).get(3) instanceof Jango);
-assert(c.set(3, 4).get(3).val() === 4);
+    it('should return a new instance if setting a different partial value', function () {
+      b.set('one', 2).should.not.equal(b);
+      c.set(0, 2).should.not.equal(c);
+      d.set(['one', 'two'], 'four').should.not.equal(d);
+      d.set('one', {two: 'four'}).should.not.equal(d);
+      d.set(['a', 0], 'c').should.not.equal(d);
+    });
 
-// returns new instance if setting new key
-assert(c.merge([1, 2, 3, 4]) !== c);
-assert(c.set(3, 4) !== c);
+    it('should return same instances of unchanged keys', function () {
+      b.set('one', 2).get('two').should.equal(b.get('two'));
+      c.set(0, 2).get(1).should.equal(c.get(1));
+    });
 
+    it('should return new instances of changed keys', function () {
+      b.set('one', 2).get('one').should.not.equal(b.get('one'));
+      c.set(0, 2).get(0).should.not.equal(c.get(0));
+    });
 
-// NESTED VALUES
-var d = Jango({one: {two: 'three'}, a: ['b', 'c']});
+    it('should return a new instance if adding a new key', function () {
+      b.set('three', 3).get('three').val().should.equal(3);
+      b.set('three', 3).should.not.equal(b);
+      c.set(3, 4).get(3).val().should.equal(4);
+      c.set(3, 4).should.not.equal(c);
+    });
 
-// returns an instance of Jango for nested properties
-assert(d.get(['one', 'two']) instanceof Jango);
-assert(d.get(['a', 0]) instanceof Jango);
-
-// returns the correct value for nested properties
-assert(d.get(['one', 'two']).val() === 'three');
-assert(d.get(['a', 0]).val() === 'b');
-
-// returns same instance if setting same value
-assert(d.merge({one: {two: 'three'}}) === d);
-assert(d.merge({a: ['b', 'c']}) === d);
-assert(d.set(['one', 'two'], 'three') === d);
-assert(d.set(['one'], {'two': 'three'}) === d);
-assert(d.set(['a', 0], 'b') === d);
-
-// returns new instance if setting different value
-assert(d.merge({one: {two: 'four'}}) !== d);
-assert(d.merge({one: {two: 'four'}}).get(['one', 'two']).val() === 'four');
-assert(d.merge({a: ['b', 'd']}) !== d);
-assert(d.merge({a: ['b', 'd']}).get(['a', 1]).val() === 'd');
-assert(d.set(['one', 'two'], 'four') !== d);
-assert(d.set(['one', 'two'], 'four').get(['one', 'two']).val() === 'four');
-assert(d.set(['a', 0], 'd') !== d);
-assert(d.set(['a', 0], 'd').get(['a', 0]).val() === 'd');
-
-// merges deeply nested jangos
-d = Jango({one: Jango({two: Jango({three: Jango('four')}) }) });
-assert(d.merge(d) === d);
-d = Jango({one: [Jango({two: Jango(2)}), Jango({three: Jango(3)}), Jango({four: Jango(4)})]});
-assert(d.set('one', d.get('one').map(item => item.merge(item))) === d);
-
-
-// MAP
-var m = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
-
-// passes each child and the key to the predicate
-m.get('obj').map(function (child, key, self) { assert(child === m.get(['obj', key])); assert(self === m.get('obj')); });
-m.get('arr').map(function (child, key, self) { assert(child === m.get(['arr', key])); assert(self === m.get('arr')); });
-
-// returns same instance if setting same values
-var n = m.get('obj').map(function (child) { return child.val(); });
-assert(n === m.get('obj'));
-assert(n.get('one').val() === 1);
-assert(n.get('two').val() === 2);
-var n = m.get('arr').map(function (child) { return child.val(); });
-assert(n === m.get('arr'));
-assert(n.get(0).val() === 1);
-assert(n.get(1).val() === 2);
-
-// returns different instance if setting new values
-var n = m.get('obj').map(function (child) { return child.val() * 2; });
-assert(n !== m.get('obj'));
-assert(n.get('one').val() === 2);
-assert(n.get('two').val() === 4);
-n = m.get('arr').map(function (child) { return child.val() * 2; });
-assert(n !== m.get('arr'));
-assert(n.get(0).val() === 2);
-assert(n.get(1).val() === 4);
-
-
-// FILTER
-var m = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
-
-// passes each child, the key and itself to the predicate
-m.get('obj').filter(function (child, key, self) { assert(child === m.get(['obj', key])); assert(self === m.get('obj')); });
-m.get('arr').filter(function (child, key, self) { assert(child === m.get(['arr', key])); assert(self === m.get('arr')); });
-
-// returns same instance if no elements are removed
-var n = m.get('obj').filter(function () { return true; });
-assert(n === m.get('obj'));
-assert(n.get('one').val() === 1);
-assert(n.get('two').val() === 2);
-var n = m.get('arr').filter(function () { return true; });
-assert(n === m.get('arr'));
-assert(n.get(0).val() === 1);
-assert(n.get(1).val() === 2);
-
-// returns different instance if some values are removed
-var n = m.get('obj').filter(function (child) { return child.val() !== 1; });
-assert(n !== m.get('obj'));
-assert(n.get('two').val() === 2);
-assert(Object.keys(n.val()).length === 1);
-n = m.get('arr').filter(function (child) { return child.val() !== 1; });
-assert(n !== m.get('arr'));
-assert(n.get(0).val() === 2);
-assert(n.val().length === 1);
+    it('should overwrite the old value if no key is specified', function () {
+      b.set('blah').val().should.equal('blah');
+    });
+  });
+});

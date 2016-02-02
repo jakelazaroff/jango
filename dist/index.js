@@ -33,27 +33,31 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return obj && Jango.toString() === obj.constructor.toString();
   };
 
-  Jango.prototype.val = function () {
+  Jango.prototype.val = function (options) {
     var _this = this;
 
+    options || (options = {});
     var array = isArray(this._value);
 
-    if (array || isObject(this._value)) return Object.keys(this._value).reduce(function (accumulator, key) {
+    if ((array || isObject(this._value)) && !options.shallow) return Object.keys(this._value).reduce(function (accumulator, key) {
       accumulator[key] = _this._value[key].val();
       return accumulator;
     }, array ? [] : {});else return this._value;
   };
 
   Jango.prototype.get = function (key) {
-    var path = [].concat(key);
-    return path.length ? this._value[path.shift()].get(path) : this;
+    var path = [].concat(key),
+        traversing = path.length,
+        key = path.shift();
+
+    if (traversing) return key in this._value ? this._value[key].get(path) : undefined;else return this;
   };
 
   Jango.prototype.set = function (key, value) {
     var path = arguments.length === 2 ? [].concat(key) : (value = key, []);
 
     // if value is an instance of jango, unwrap it
-    if (Jango.isJango(value)) value = value.val();
+    if (Jango.isJango(value)) value = value.val({ shallow: true });
 
     // if this is a branch
     if (path.length > 0) {
@@ -107,7 +111,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     var additive = arguments.length <= 1 || arguments[1] === undefined ? true : arguments[1];
 
     // if source is a jango, unwrap it
-    if (Jango.isJango(source)) source = source.val();
+    if (Jango.isJango(source)) source = source.val({ shallow: true });
 
     var arr = isArray(source);
 
@@ -123,7 +127,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
       Object.keys(_extends({}, this._value, source))).reduce(function (assign, key) {
 
         // if the key holds a jango, unwrap it
-        var value = Jango.isJango(source[key]) ? source[key].val() : source[key];
+        var value = Jango.isJango(source[key]) ? source[key].val({ shallow: true }) : source[key];
 
         // if the key is in both the source and destination, set it
         if (key in source && key in _this2._value) assign[key] = _this2._value[key].set(value);

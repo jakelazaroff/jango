@@ -31,10 +31,11 @@
     return obj && Jango.toString() === obj.constructor.toString();
   };
 
-  Jango.prototype.val = function () {
+  Jango.prototype.val = function (options) {
+    options || (options = {});
     var array = isArray(this._value);
 
-    if (array || isObject(this._value))
+    if ((array || isObject(this._value)) && !options.shallow)
       return Object.keys(this._value).reduce((accumulator, key) => {
         accumulator[key] = this._value[key].val();
         return accumulator;
@@ -44,8 +45,14 @@
   };
 
   Jango.prototype.get = function (key) {
-    var path = [].concat(key);
-    return path.length ? this._value[path.shift()].get(path) : this;
+    var path = [].concat(key),
+        traversing = path.length,
+        key = path.shift();
+
+    if (traversing)
+      return key in this._value ? this._value[key].get(path) : undefined;
+    else
+      return this;
   };
 
   Jango.prototype.set = function (key, value) {
@@ -53,7 +60,7 @@
 
     // if value is an instance of jango, unwrap it
     if (Jango.isJango(value))
-      value = value.val();
+      value = value.val({shallow: true});
 
     // if this is a branch
     if (path.length > 0) {
@@ -104,7 +111,7 @@
 
     // if source is a jango, unwrap it
     if (Jango.isJango(source))
-      source = source.val();
+      source = source.val({shallow: true});
 
     var arr = isArray(source);
 
@@ -122,7 +129,7 @@
               .reduce((assign, key) => {
 
                 // if the key holds a jango, unwrap it
-                var value = Jango.isJango(source[key]) ? source[key].val() : source[key];
+                var value = Jango.isJango(source[key]) ? source[key].val({shallow: true}) : source[key];
 
                 // if the key is in both the source and destination, set it
                 if (key in source && key in this._value)
