@@ -162,4 +162,54 @@ describe('Jango', function () {
       b.set('blah').val().should.equal('blah');
     });
   });
+
+  describe('.merge', function () {
+
+    it('should return the same instance if setting the same value', function () {
+      b.merge({one: 1, two: 2}).should.equal(b);
+      c.merge([1, 2, 3]).should.equal(c);
+      d.merge({one: {two: 'three'}}).should.equal(d);
+      d.merge({a: ['b', 'c']}).should.equal(d);
+    });
+
+    it('should return the same instance if setting the same partial value', function () {
+      b.merge({one: 1}).should.equal(b);
+      c.merge([1]).should.equal(c);
+    });
+
+    it('should return a new instance if setting a new partial value', function () {
+      b.merge({one: 2}).should.not.equal(b);
+      b.merge({one: 2}).get('one').val().should.equal(2);
+
+      c.merge([2]).should.not.equal(c);
+      c.merge([2]).get(0).val().should.equal(2);
+
+      d.merge({one: {two: 'four'}}).should.not.equal(d);
+      d.merge({one: {two: 'four'}}).get(['one', 'two']).val().should.equal('four');
+      d.merge({a: ['b', 'd']}).should.not.equal(d);
+      d.merge({a: ['b', 'd']}).get(['a', 1]).val().should.equal('d');
+    });
+
+    it('should return the same instance of unchanged keys', function () {
+      b.merge({one: 2}).get('two').should.equal(b.get('two'));
+      c.merge([2]).get(1).should.equal(c.get(1));
+    });
+
+    it('should return a new instance of changed keys', function () {
+      b.merge({one: 2}).get('one').should.not.equal(b.get('one'));
+      c.merge([2]).get(0).should.not.equal(c.get(0));
+    });
+
+    it('should return a new instance if adding a new key', function () {
+      b.merge({three: 3}).get('three').val().should.equal(3);
+      b.merge({three: 3}).should.not.equal(b);
+      c.merge([1, 2, 3, 4]).get(3).val().should.equal(4);
+      c.merge([1, 2, 3, 4]).should.not.equal(c);
+    });
+
+    it('should merge deeply nested jangos', function () {
+      var e = Jango({one: Jango({two: Jango({three: Jango('four')}) }) });
+      e.merge(e).should.equal(e);
+    });
+  });
 });

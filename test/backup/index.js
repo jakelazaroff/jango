@@ -5,68 +5,7 @@ function assert (condition) {
     throw new Error('Assertion failed');
 }
 
-// OBJECTS
-var b = Jango({one: 1, two: 2});
-
-// returns same instance if setting same value
-assert(b.merge({one: 1, two: 2}) === b);
-
-// returns same instance if setting same partial value
-assert(b.merge({one: 1}) === b);
-
-// returns new instance if setting new partial value
-assert(b.merge({one: 2}) !== b);
-
-// returns new instance of changed keys
-assert(b.merge({one: 2}).get('one') !== b.get('one'));
-
-// returns same instance of unchanged keys
-assert(b.merge({one: 2}).get('two') === b.get('two'));
-
-// returns new instance if setting new key
-assert(b.merge({three: 3}) !== b);
-
-
-// ARRAYS
-var c = Jango([1, 2, 3]);
-
-// doesn't mutate when setting
-c.merge([2, 3]); assert(c.get(0).val() === 1);
-
-// returns same instance if setting same value
-assert(c.merge([1, 2, 3]) === c);
-
-// returns same instance if setting same partial value
-assert(c.merge([1]) === c);
-
-// returns new instance if setting new partial value
-assert(c.merge([2]) !== c);
-
-// returns new instance of changed keys
-assert(c.merge([2]).get(0) !== c.get(0));
-
-// returns same instance of unchanged keys
-assert(c.merge([1]).get(0) === c.get(0));
-
-// allows new keys to be added
-assert(c.merge([1, 2, 3, 4]).get(3) instanceof Jango);
-assert(c.merge([1, 2, 3, 4]).get(3).val() === 4);
-
-// returns new instance if setting new key
-assert(c.merge([1, 2, 3, 4]) !== c);
-
-
 // NESTED VALUES
-
-// returns same instance if setting same value
-assert(d.merge({one: {two: 'three'}}) === d);
-assert(d.merge({a: ['b', 'c']}) === d);
-
-// returns new instance if setting different value
-assert(d.merge({one: {two: 'four'}}) !== d);
-assert(d.merge({one: {two: 'four'}}).get(['one', 'two']).val() === 'four');
-assert(d.merge({a: ['b', 'd']}) !== d);
-assert(d.merge({a: ['b', 'd']}).get(['a', 1]).val() === 'd');
 
 // merges deeply nested jangos
 d = Jango({one: Jango({two: Jango({three: Jango('four')}) }) });
