@@ -1,5 +1,5 @@
 # Jango
-[![npm](https://img.shields.io/npm/dm/jango.svg)](https://www.npmjs.com/package/jango) [![Codeship](https://img.shields.io/travis/jakelazaroff/jango.svg)](https://travis-ci.org/jakelazaroff/jango)
+[![Codeship](https://img.shields.io/travis/jakelazaroff/jango.svg)](https://travis-ci.org/jakelazaroff/jango)
 
 Jango is a tiny alternative to Immutable.js. It weighs in at 1.14kb gzipped and has no dependencies.
 
@@ -21,21 +21,17 @@ A "Jango" is an object created with the Jango factory that holds a single value.
 Creates a Jango. Complex data structures passed to the factory are recursively converted.
 
 ```javascript
-// A Jango can hold a single value,
 var plain = Jango(1);
 
-// an object,
 var object = Jango({one: 1, two: 2, three: 3});
 
-// an array,
 var array = Jango([1, 2, 3]);
 
-// or even nested data structures.
 var nested = Jango({obj: {one: 1, two: 2, three: 3}, arr: [1, 2, 3]});
 ```
 
-### .val([options])
-Recursively converts the value of the Jango object back to a JavaScript object.
+### .val([key, options])
+Recursively converts the value of the Jango object back to a JavaScript object. Pass a string or array to convert the value at that path.
 
 #### options
 - *shallow:* only converts the root object, not any nested Jangos.
@@ -48,6 +44,8 @@ object.val(); // {one: 1, two: 2, three: 3}
 array.val(); // [1, 2, 3]
 
 nested.val(); // {obj: {one: 1, two: 2, three: 3}, arr: [1, 2, 3]}
+
+nested.val(['obj', 'one']) // 1
 
 obj.val({shallow: true}) // {one: Jango(1), two: Jango(2), three: Jango(3)}
 ```
@@ -69,11 +67,11 @@ Replaces either the entire Jango or the given key with the given value. Pass an 
 Returns the same object if no mutation occurs.
 
 ```javascript
-plain.set(2); // 2
+plain.set(2); // Jango(2)
 
 object.set('two', {three: 'four'}); // Jango({one: 2, two: {three: four}, three: 3})
 
-array.set(0, 2); // [2, 2, 3]
+array.set(0, 2); // Jango([2, 2, 3])
 
 nested.set(['arr', 2], 4); // Jango({obj: {one: 1, two: 2, three: 3}, arr: [1, 2, 4]})
 
