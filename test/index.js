@@ -31,11 +31,11 @@ describe('Jango', function () {
     });
 
     it('should set the values correctly in an object', function () {
-      b.get('one').val().should.equal(1);
+      b.val('one').should.equal(1);
     });
 
     it('should set the values correctly in an array', function () {
-      c.get(0).val().should.equal(1);
+      c.val(0).should.equal(1);
     });
 
     it('should recursively create nested instances of jango', function () {
@@ -44,8 +44,8 @@ describe('Jango', function () {
     });
 
     it('should recursively set the values correctly ', function () {
-      d.get(['one', 'two']).val().should.equal('three');
-      d.get(['a', 0]).val().should.equal('b');
+      d.val(['one', 'two']).should.equal('three');
+      d.val(['a', 0]).should.equal('b');
     });
   });
 
@@ -58,6 +58,16 @@ describe('Jango', function () {
     it('should return nested values', function () {
       b.val().should.eql({one: 1, two: 2});
       c.val().should.eql([1, 2, 3]);
+    });
+
+    it('should traverse up a tree to return nested values if key is passed', function () {
+      b.val('one').should.equal(1);
+      c.val(0).should.equal(1);
+      d.val(['one', 'two']).should.equal('three');
+    });
+
+    it('should return undefined if no value is found', function () {
+      expect(a.val('one')).not.to.exist;
     });
 
     it('should not recursively return values if `shallow` options is passed', function () {
@@ -76,9 +86,13 @@ describe('Jango', function () {
 
   describe('.get', function () {
 
+    it('should return itself if not passed a key', function () {
+      a.get().should.equal(a);
+    });
+
     it('should return an instance of jango if passed a key in the value', function () {
       b.get('one').should.be.an.instanceof(Jango);
-      b.get('one').val().should.equal(1);
+      b.val('one').should.equal(1);
     });
 
     it('should return an instance of jango if passed a nonexistent key', function () {
@@ -87,7 +101,7 @@ describe('Jango', function () {
 
     it('should return a nested instance of jango if passed an array', function () {
       d.get(['one', 'two']).should.be.an.instanceof(Jango);
-      d.get(['one', 'two']).val().should.equal('three');
+      d.val(['one', 'two']).should.equal('three');
     });
   });
 
@@ -104,7 +118,7 @@ describe('Jango', function () {
     });
 
     it('should set nested value if passed an array', function () {
-      d.set(['one', 'two'], 'three').get(['one', 'two']).val().should.equal('three');
+      d.set(['one', 'two'], 'three').val(['one', 'two']).should.equal('three');
     });
 
     it('should return the same instance if setting the same value', function () {
@@ -152,9 +166,9 @@ describe('Jango', function () {
     });
 
     it('should return a new instance if adding a new key', function () {
-      b.set('three', 3).get('three').val().should.equal(3);
+      b.set('three', 3).val('three').should.equal(3);
       b.set('three', 3).should.not.equal(b);
-      c.set(3, 4).get(3).val().should.equal(4);
+      c.set(3, 4).val(3).should.equal(4);
       c.set(3, 4).should.not.equal(c);
     });
 
@@ -179,15 +193,15 @@ describe('Jango', function () {
 
     it('should return a new instance if setting a new partial value', function () {
       b.merge({one: 2}).should.not.equal(b);
-      b.merge({one: 2}).get('one').val().should.equal(2);
+      b.merge({one: 2}).val('one').should.equal(2);
 
       c.merge([2]).should.not.equal(c);
-      c.merge([2]).get(0).val().should.equal(2);
+      c.merge([2]).val(0).should.equal(2);
 
       d.merge({one: {two: 'four'}}).should.not.equal(d);
-      d.merge({one: {two: 'four'}}).get(['one', 'two']).val().should.equal('four');
+      d.merge({one: {two: 'four'}}).val(['one', 'two']).should.equal('four');
       d.merge({a: ['b', 'd']}).should.not.equal(d);
-      d.merge({a: ['b', 'd']}).get(['a', 1]).val().should.equal('d');
+      d.merge({a: ['b', 'd']}).val(['a', 1]).should.equal('d');
     });
 
     it('should return the same instance of unchanged keys', function () {
@@ -201,15 +215,114 @@ describe('Jango', function () {
     });
 
     it('should return a new instance if adding a new key', function () {
-      b.merge({three: 3}).get('three').val().should.equal(3);
+      b.merge({three: 3}).val('three').should.equal(3);
       b.merge({three: 3}).should.not.equal(b);
-      c.merge([1, 2, 3, 4]).get(3).val().should.equal(4);
+      c.merge([1, 2, 3, 4]).val(3).should.equal(4);
       c.merge([1, 2, 3, 4]).should.not.equal(c);
     });
 
     it('should merge deeply nested jangos', function () {
       var e = Jango({one: Jango({two: Jango({three: Jango('four')}) }) });
       e.merge(e).should.equal(e);
+    });
+  });
+
+  describe('.filter', function () {
+
+    var f = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
+
+    it('should pass each child, key and itself to the predicate', function () {
+
+      f.get('obj').filter(function (child, key, self) {
+        child.should.equal(f.get(['obj', key]));
+        self.should.equal(f.get('obj'));
+      });
+
+      f.get('arr').filter(function (child, key, self) {
+        child.should.equal(f.get(['arr', key]));
+        self.should.equal(f.get('arr'));
+      });
+    });
+
+    it('should return the same instance if all predicates return true', function () {
+
+      var g = f.get('obj').filter(function (child) { return true; });
+      g.should.equal(f.get('obj'));
+      g.val('one').should.equal(1);
+      g.val('two').should.equal(2);
+
+
+      var g = f.get('arr').filter(function (child) { return true; });
+      g.should.equal(f.get('arr'));
+      g.val(0).should.equal(1);
+      g.val(1).should.equal(2);
+    });
+
+    it('should return a new instance if any value is different', function () {
+
+      var g = f.get('obj').filter(function (child) { return child.val() !== 1; });
+      g.should.not.equal(f.get('obj'));
+      g.val('two').should.equal(2);
+      Object.keys(g.val()).length.should.equal(1);
+
+      g = f.get('arr').filter(function (child) { return child.val() !== 1; });
+      g.should.not.equal(f.get('arr'));
+      g.val(0).should.equal(2);
+      Object.keys(g.val()).length.should.equal(1);
+    });
+  });
+
+  describe('.map', function () {
+
+    var m = Jango({obj: {one: 1, two: 2}, arr: [1, 2]});
+
+    it('should pass each child, key and itself to the predicate', function () {
+
+      m.get('obj').map(function (child, key, self) {
+        child.should.equal(m.get(['obj', key]));
+        self.should.equal(m.get('obj'));
+      });
+
+      m.get('arr').map(function (child, key, self) {
+        child.should.equal(m.get(['arr', key]));
+        self.should.equal(m.get('arr'));
+      });
+    });
+
+    it('should return the same instance if all values are the same', function () {
+
+      var n = m.get('obj').map(function (child) { return child.val(); });
+      n.should.equal(m.get('obj'));
+      n.get('one').val().should.equal(1);
+      n.get('two').val().should.equal(2);
+
+      var n = m.get('obj').map(function (child) { return child });
+      n.should.equal(m.get('obj'));
+      n.get('one').val().should.equal(1);
+      n.get('two').val().should.equal(2);
+
+      var n = m.get('arr').map(function (child) { return child.val(); });
+      n.should.equal(m.get('arr'));
+      n.get(0).val().should.equal(1);
+      n.get(1).val().should.equal(2);
+
+      var n = m.get('arr').map(function (child) { return child });
+      n.should.equal(m.get('arr'));
+      n.get(0).val().should.equal(1);
+      n.get(1).val().should.equal(2);
+    });
+
+    it('should return a new instance if any value is different', function () {
+
+      var n = m.get('obj').map(function (child) { return child.val() * 2; });
+      n.should.not.equal(m.get('obj'));
+      n.get('one').val().should.equal(2);
+      n.get('two').val().should.equal(4);
+
+      n = m.get('arr').map(function (child) { return child.val() * 2; });
+      n.should.not.equal(m.get('arr'));
+      n.get(0).val().should.equal(2);
+      n.get(1).val().should.equal(4);
     });
   });
 });

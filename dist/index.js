@@ -33,21 +33,34 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
     return obj && Jango.toString() === obj.constructor.toString();
   };
 
-  Jango.prototype.val = function (options) {
+  Jango.prototype.val = function (key) {
     var _this = this;
 
-    options || (options = {});
-    var array = isArray(this._value);
+    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-    if ((array || isObject(this._value)) && !options.shallow) return Object.keys(this._value).reduce(function (accumulator, key) {
-      accumulator[key] = _this._value[key].val();
-      return accumulator;
-    }, array ? [] : {});else return this._value;
+    var array = isArray(this._value),
+        object = isObject(this._value);
+
+    if (isObject(key)) options = key, key = undefined;
+
+    if (key = [].concat(key), typeof key[0] !== 'undefined' && key.length) {
+
+      if (array || object) {
+        var nested = this.get(key);
+        return nested && nested.val(options);
+      } else return undefined;
+    } else {
+
+      if ((array || object) && !options.shallow) return Object.keys(this._value).reduce(function (accumulator, key) {
+        accumulator[key] = _this._value[key].val();
+        return accumulator;
+      }, array ? [] : {});else return this._value;
+    }
   };
 
   Jango.prototype.get = function (key) {
     var path = [].concat(key),
-        traversing = path.length,
+        traversing = typeof path[0] !== 'undefined' && path.length,
         key = path.shift();
 
     if (traversing) return key in this._value ? this._value[key].get(path) : undefined;else return this;

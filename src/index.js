@@ -31,22 +31,36 @@
     return obj && Jango.toString() === obj.constructor.toString();
   };
 
-  Jango.prototype.val = function (options) {
-    options || (options = {});
-    var array = isArray(this._value);
+  Jango.prototype.val = function (key, options = {}) {
+    var array = isArray(this._value),
+        object = isObject(this._value);
 
-    if ((array || isObject(this._value)) && !options.shallow)
-      return Object.keys(this._value).reduce((accumulator, key) => {
-        accumulator[key] = this._value[key].val();
-        return accumulator;
-      }, (array ? [] : {}));
-    else
-      return this._value;
+
+    if (isObject(key))
+      options = key, key = undefined;
+
+    if (key = [].concat(key), typeof key[0] !== 'undefined' && key.length) {
+
+      if (array || object) {
+        var nested = this.get(key);
+        return nested && nested.val(options);
+      } else return undefined;
+    } else {
+
+      if ((array || object) && !options.shallow)
+        return Object.keys(this._value).reduce((accumulator, key) => {
+          accumulator[key] = this._value[key].val();
+          return accumulator;
+        }, (array ? [] : {}));
+
+      else
+        return this._value;
+    }
   };
 
   Jango.prototype.get = function (key) {
     var path = [].concat(key),
-        traversing = path.length,
+        traversing = typeof path[0] !== 'undefined' && path.length,
         key = path.shift();
 
     if (traversing)
